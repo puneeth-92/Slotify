@@ -1,0 +1,95 @@
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRoute } from '@react-navigation/native';
+
+export default function BottomNav({ navigation }) {
+
+  const route = useRoute(); 
+
+  const getActiveTab = () => {
+    if (route.name === 'Home') return 'home';
+    if (route.name === 'Bookings') return 'calendar';
+    if (route.name === 'Profile') return 'person';
+    return '';
+  };
+
+  const activeTab = getActiveTab();
+
+  const tabs = [
+    { key: 'home', icon: 'home', label: 'Home' },
+    { key: 'calendar', icon: 'calendar', label: 'Bookings' },
+    { key: 'sparkles', icon: 'sparkles', label: 'AI' },
+    { key: 'person', icon: 'person', label: 'Profile' },
+  ];
+
+  const handlePress = (tab) => {
+    if (tab.key === 'home') {
+      navigation.navigate('Home');
+    } 
+    else if (tab.key === 'calendar') {
+      navigation.navigate('Bookings');
+    } 
+    else if (tab.key === 'person') {
+      navigation.navigate('Profile');
+    }
+  };
+
+  return (
+    <View style={styles.nav}>
+      {tabs.map((tab) => (
+        <TouchableOpacity
+          key={tab.key}
+          style={styles.navItem}
+          onPress={() => handlePress(tab)}
+        >
+          <Ionicons
+            name={
+              activeTab === tab.key
+                ? tab.icon
+                : `${tab.icon}-outline`
+            }
+            size={24}
+            color={activeTab === tab.key ? '#7C3AED' : '#999'}
+          />
+
+          <Text
+            style={[
+              styles.navLabel,
+              activeTab === tab.key && styles.navLabelActive
+            ]}
+          >
+            {tab.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  nav: {
+    height: 80,
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingBottom: 10,
+  },
+
+  navItem: {
+    alignItems: 'center',
+  },
+
+  navLabel: {
+    fontSize: 10,
+    marginTop: 3,
+    color: '#999',
+  },
+
+  navLabelActive: {
+    color: '#7C3AED',
+    fontWeight: '600',
+  },
+});

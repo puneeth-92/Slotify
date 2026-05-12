@@ -1,0 +1,353 @@
+import { useState } from 'react';
+import {
+  View, Text, StyleSheet, Image,
+  TouchableOpacity, ScrollView, Linking, Modal
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
+export default function SalonScreen({ route, navigation }) {
+  const { salon, booking } = route.params || {};
+
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [date, setDate] = useState(new Date());
+  const [tempDate, setTempDate] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
+  const [booked, setBooked] = useState(false);
+
+  const isUpcoming = booking?.status === 'upcoming';
+  const isCompleted = booking?.status === 'completed';
+  const isCancelled = booking?.status === 'cancelled';
+
+  const times = [
+    '10:00 am', '10:30 am',
+    '12:00 pm', '12:30 pm',
+    '4:00 pm', '4:30 pm',
+    '5:00 pm', '5:30 pm'
+  ];
+
+  const handleBooking = () => {
+    if (!selectedTime) return;
+
+    setBooked(true);
+
+    setTimeout(() => {
+      setBooked(false);
+      navigation.navigate('Home');
+    }, 1500);
+  };
+
+  const onChangeDate = (event, selectedDate) => {
+    if (selectedDate) setTempDate(selectedDate);
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: '#F3F0FF' }}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+
+        {/* IMAGE */}
+        <View>
+          <Image source={{ uri: salon.image }} style={styles.image} />
+
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={20} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.container}>
+
+          {/* TITLE */}
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>{salon.name}</Text>
+            <View style={styles.rating}>
+              <Ionicons name="star" size={14} />
+              <Text style={{ marginLeft: 4 }}>{salon.rating}</Text>
+            </View>
+          </View>
+
+          <Text style={styles.desc}>Professional grooming services</Text>
+
+          {/* LOCATION */}
+          <TouchableOpacity
+            style={styles.locationRow}
+            onPress={() =>
+              Linking.openURL(
+                'https://maps.google.com/?q=BMS+College+of+Engineering+Bangalore'
+              )
+            }
+          >
+            <Ionicons name="location-outline" size={18} />
+            <Text style={styles.locationText}>BMSCE Bangalore</Text>
+          </TouchableOpacity>
+
+          {/* UPCOMING */}
+          {isUpcoming && (
+            <View>
+              <Text style={styles.section}>Your Booking</Text>
+              <Text>Date: {booking.date}</Text>
+              <Text>Time: {booking.time}</Text>
+            </View>
+          )}
+
+          {/* CANCELLED */}
+          {isCancelled && (
+            <View style={styles.center}>
+              <Ionicons name="close-circle" size={70} color="red" />
+              <Text style={styles.cancelledText}>Booking Cancelled</Text>
+            </View>
+          )}
+
+          {/* COMPLETED */}
+          {isCompleted && (
+            <TouchableOpacity
+              style={styles.submit}
+              onPress={() => navigation.replace('Salon', { salon })}
+            >
+              <Text style={styles.submitText}>Book Again</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* NORMAL BOOKING */}
+          {!booking && (
+            <>
+              {/* DATE */}
+              <Text style={styles.section}>Date</Text>
+
+              <TouchableOpacity
+                style={styles.dateBox}
+                onPress={() => setShowPicker(true)}
+              >
+                <Text style={styles.dateText}>
+                  {date.toDateString()}
+                </Text>
+              </TouchableOpacity>
+
+              {showPicker && (
+                <View style={styles.pickerWrapper}>
+                  <DateTimePicker
+                    value={tempDate}
+                    mode="date"
+                    display="spinner"
+                    onChange={onChangeDate}
+                  />
+
+                  <TouchableOpacity
+                    style={styles.tickBtn}
+                    onPress={() => {
+                      setDate(tempDate);
+                      setShowPicker(false);
+                    }}
+                  >
+                    <Ionicons name="checkmark" size={24} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* TIMES */}
+              <Text style={styles.section}>Available times</Text>
+
+              <View style={styles.timeGrid}>
+                {times.map((t) => (
+                  <TouchableOpacity
+                    key={t}
+                    style={[
+                      styles.timeBtn,
+                      selectedTime === t && styles.activeTime
+                    ]}
+                    onPress={() => setSelectedTime(t)}
+                  >
+                    <Text style={[
+                      styles.timeText,
+                      selectedTime === t && styles.activeTimeText
+                    ]}>
+                      {t}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* BILL */}
+              <Text style={styles.section}>Bill Detail</Text>
+
+              <View style={styles.billRow}>
+                <Text>Service Amount</Text>
+                <Text style={styles.billAmount}>₹{salon.price}</Text>
+              </View>
+
+              {/* SUBMIT */}
+              <TouchableOpacity style={styles.submit} onPress={handleBooking}>
+                <Text style={styles.submitText}>Submit</Text>
+              </TouchableOpacity>
+
+              {/* CANCEL */}
+              <TouchableOpacity
+                style={styles.cancel}
+                onPress={() => navigation.goBack()}
+              >
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </>
+          )}
+
+        </View>
+      </ScrollView>
+
+      {/* MODAL */}
+      <Modal transparent visible={booked} animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Ionicons name="checkmark-circle" size={70} color="#7C3AED" />
+            <Text style={styles.modalText}>Booking Confirmed</Text>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  image: { width: '100%', height: 220 },
+
+  backBtn: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    backgroundColor: '#fff',
+    padding: 8,
+    borderRadius: 20,
+  },
+
+  container: { padding: 20 },
+
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+
+  title: { fontSize: 22, fontWeight: '800' },
+
+  rating: { flexDirection: 'row', alignItems: 'center' },
+
+  desc: { color: '#777', marginBottom: 15 },
+
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+
+  locationText: {
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  section: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+
+  dateBox: {
+    backgroundColor: '#EDEBFF',
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+
+  dateText: { fontWeight: '600' },
+
+  pickerWrapper: { alignItems: 'center' },
+
+  timeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+
+  timeBtn: {
+    width: '47%',
+    padding: 12,
+    borderRadius: 20,
+    backgroundColor: '#EDEBFF',
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+
+  activeTime: { backgroundColor: '#7C3AED' },
+
+  activeTimeText: { color: '#fff' },
+
+  timeText: { fontSize: 13 },
+
+  billRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+
+  billAmount: { fontWeight: '600' },
+
+  submit: {
+    backgroundColor: '#7C3AED',
+    padding: 16,
+    borderRadius: 30,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+
+  submitText: { color: '#fff', fontWeight: '700' },
+
+  cancel: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 14,
+    borderRadius: 30,
+    alignItems: 'center',
+  },
+
+  cancelText: { color: 'red', fontWeight: '600' },
+
+  cancelledText: {
+    marginTop: 10,
+    fontWeight: '700',
+    color: 'red',
+  },
+
+  center: {
+    alignItems: 'center',
+    marginTop: 30,
+  },
+
+  tickBtn: {
+    backgroundColor: '#7C3AED',
+    padding: 10,
+    borderRadius: 20,
+    marginTop: 10,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  modalBox: {
+    backgroundColor: '#fff',
+    padding: 30,
+    borderRadius: 20,
+    alignItems: 'center',
+    width: '70%',
+  },
+
+  modalText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+});
